@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Steam 小站 · 成长里程碑</title>
+  <style>
+    /* ===== 全局 ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #1a1b2e;
+      --surface:   #22233a;
+      --card:      #2a2b45;
+      --border:    rgba(255,255,255,0.10);
+      --accent1:   #7c6af5;   /* 紫蓝主色 */
+      --accent2:   #4ecac8;   /* 青色辅助 */
+      --accent3:   #f5a623;   /* 金色高亮 */
+      --accent4:   #e85d75;   /* 红粉 */
+      --text:      #eeeef8;
+      --muted:     #8f8fb0;
+      --glow1:     rgba(124,106,245,0.3);
+      --glow2:     rgba(78,202,200,0.25);
+      --timeline-w: 3px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ===== 背景粒子装饰 ===== */
+    .bg-deco {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 20% 20%, rgba(124,106,245,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 35% at 80% 80%, rgba(78,202,200,0.15) 0%, transparent 70%);
+    }
+
+    /* ===== 顶部 Hero ===== */
+    .hero {
+      position: relative; z-index: 1;
+      text-align: center;
+      padding: 72px 20px 56px;
+    }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(124,106,245,0.15);
+      border: 1px solid rgba(124,106,245,0.4);
+      border-radius: 99px;
+      padding: 6px 18px;
+      font-size: 13px;
+      color: #a89ef8;
+      letter-spacing: 0.04em;
+      margin-bottom: 24px;
+    }
+
+    .hero-badge .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent1);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.75); }
+    }
+
+    .hero h1 {
+      font-size: clamp(28px, 5vw, 52px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      background: linear-gradient(135deg, #fff 0%, var(--accent1) 50%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero .subtitle {
+      margin-top: 16px;
+      font-size: 15px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+
+    .hero .founded {
+      margin-top: 12px;
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 13px; color: var(--accent2);
+      opacity: 0.9;
+    }
+
+    .hero .founded svg { flex-shrink: 0; }
+
+    /* ===== 统计卡片 ===== */
+    .stats-row {
+      position: relative; z-index: 1;
+      display: flex; flex-wrap: wrap; justify-content: center;
+      gap: 16px;
+      max-width: 960px;
+      margin: 0 auto 64px;
+      padding: 0 20px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 28px;
+      min-width: 160px;
+      flex: 1 1 150px;
+      max-width: 220px;
+      text-align: center;
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    }
+
+    .stat-card .num {
+      font-size: 32px; font-weight: 800;
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-card .label {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    /* ===== Section title ===== */
+    .section-title {
+      position: relative; z-index: 1;
+      max-width: 960px;
+      margin: 0 auto 32px;
+      padding: 0 20px;
+    }
+
+    .section-title h2 {
+      font-size: 18px;
+      font-weight: 700;
+      display: flex; align-items: center; gap: 10px;
+      color: var(--text);
+    }
+
+    .section-title h2 .tag {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      padding: 3px 10px;
+      border-radius: 99px;
+      border: 1px solid;
+    }
+
+    /* ===== Timeline 容器 ===== */
+    .timeline-wrap {
+      position: relative; z-index: 1;
+      max-width: 960px;
+      margin: 0 auto 72px;
+      padding: 0 20px;
+    }
+
+    /* 中轴线 */
+    .timeline-wrap::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0; bottom: 0;
+      width: var(--timeline-w);
+      background: linear-gradient(to bottom, transparent, var(--accent1) 8%, var(--accent2) 92%, transparent);
+      transform: translateX(-50%);
+      border-radius: 99px;
+    }
+
+    /* ===== Timeline 条目 ===== */
+    .tl-item {
+      position: relative;
+      display: flex;
+      width: 100%;
+      margin-bottom: 32px;
+    }
+
+    /* 左右交替 */
+    .tl-item.left  { flex-direction: row-reverse; }
+    .tl-item.right { flex-direction: row; }
+
+    /* 中间节点 */
+    .tl-node {
+      position: absolute;
+      left: 50%;
+      top: 24px;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+    }
+
+    .node-dot {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      border: 2px solid var(--bg);
+      transition: transform 0.25s;
+    }
+
+    .tl-item:hover .node-dot { transform: scale(1.4); }
+
+    /* 节点颜色 - 按分类 */
+    .cat-user     .node-dot { background: var(--accent1); box-shadow: 0 0 10px var(--glow1); }
+    .cat-user-day .node-dot { background: var(--accent2); box-shadow: 0 0 10px var(--glow2); }
+    .cat-post     .node-dot { background: var(--accent3); box-shadow: 0 0 10px rgba(245,166,35,0.35); }
+    .cat-post-day .node-dot { background: var(--accent4); box-shadow: 0 0 10px rgba(232,93,117,0.35); }
+    .cat-found    .node-dot { background: #fff;           box-shadow: 0 0 12px rgba(255,255,255,0.4); }
+
+    /* 卡片 */
+    .tl-card {
+      width: calc(50% - 32px);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px 22px;
+      transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+      cursor: default;
+    }
+
+    .tl-item.left  .tl-card { margin-right: 32px; }
+    .tl-item.right .tl-card { margin-left: 32px; }
+
+    .tl-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 36px rgba(0,0,0,0.45);
+    }
+
+    .cat-user     .tl-card:hover { border-color: rgba(124,106,245,0.5); }
+    .cat-user-day .tl-card:hover { border-color: rgba(78,202,200,0.5); }
+    .cat-post     .tl-card:hover { border-color: rgba(245,166,35,0.5); }
+    .cat-post-day .tl-card:hover { border-color: rgba(232,93,117,0.5); }
+    .cat-found    .tl-card:hover { border-color: rgba(255,255,255,0.4); }
+
+    /* 卡片内 */
+    .tl-date {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    .tl-title {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+
+    .tl-title .milestone-num {
+      display: inline-block;
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    /* 里程碑数字着色 */
+    .cat-user     .milestone-num { color: var(--accent1); }
+    .cat-user-day .milestone-num { color: var(--accent2); }
+    .cat-post     .milestone-num { color: var(--accent3); }
+    .cat-post-day .milestone-num { color: var(--accent4); }
+    .cat-found    .milestone-num { color: #fff; }
+
+    .tl-actual {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      padding: 4px 10px;
+    }
+
+    .tl-actual .actual-val {
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* 待达成 */
+    .tl-pending .tl-card {
+      opacity: 0.55;
+      border-style: dashed;
+    }
+
+    .tl-pending .node-dot {
+      background: transparent !important;
+      border-color: var(--muted) !important;
+      box-shadow: none !important;
+    }
+
+    .tl-pending .tl-date { color: var(--muted); }
+
+    .pending-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.04);
+      border: 1px dashed rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 4px 10px;
+    }
+
+    /* 建站卡 */
+    .founded-card {
+      background: linear-gradient(135deg, rgba(124,106,245,0.18), rgba(78,202,200,0.12));
+      border-color: rgba(124,106,245,0.4) !important;
+    }
+
+    .founded-card .tl-title { font-size: 17px; }
+
+    /* ===== 分类图例 ===== */
+    .legend {
+      position: relative; z-index: 1;
+      max-width: 960px;
+      margin: 0 auto 72px;
+      padding: 20px 28px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      display: flex; flex-wrap: wrap; gap: 20px;
+    }
+
+    .legend-item {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color: var(--muted);
+    }
+
+    .legend-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ===== Footer ===== */
+    footer {
+      position: relative; z-index: 1;
+      text-align: center;
+      padding: 32px 20px 48px;
+      font-size: 12px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+
+    footer span { color: var(--accent1); }
+
+    /* ===== 响应式 ===== */
+    @media (max-width: 640px) {
+      .timeline-wrap::before { left: 18px; }
+
+      .tl-item,
+      .tl-item.left,
+      .tl-item.right { flex-direction: column; padding-left: 44px; }
+
+      .tl-node { left: 18px; top: 20px; }
+
+      .tl-card,
+      .tl-item.left .tl-card,
+      .tl-item.right .tl-card {
+        width: 100%;
+        margin-left: 0; margin-right: 0;
+      }
+
+      .stats-row { gap: 10px; }
+      .stat-card { max-width: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-deco"></div>
+
+<!-- ===== Hero ===== -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="dot"></span>
+    B站 Steam 小站
+  </div>
+  <h1>成长里程碑</h1>
+  <div class="founded" style="margin-top:20px;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    建站于 2025年07月21日 16:27
+  </div>
+</section>
+
+<!-- ===== 统计概览 ===== -->
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="num">10,407</div>
+    <div class="label">累计入站用户（峰值）</div>
+  </div>
+  <div class="stat-card">
+    <div class="num">2,920</div>
+    <div class="label">单日入站用户（最高）</div>
+  </div>
+  <div class="stat-card">
+    <div class="num">10,180</div>
+    <div class="label">累计发帖数（最新）</div>
+  </div>
+  <div class="stat-card">
+    <div class="num">747</div>
+    <div class="label">单日发帖（最高）</div>
+  </div>
+</div>
+
+<!-- ===== 图例 ===== -->
+<div class="legend" style="max-width:960px;margin:0 auto 48px;padding:16px 24px;">
+  <div class="legend-item"><div class="legend-dot" style="background:#7c6af5;"></div>累计入站用户</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#4ecac8;"></div>单日入站用户</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f5a623;"></div>累计发帖数</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#e85d75;"></div>单日发帖数</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#fff;"></div>建站事件</div>
+  <div class="legend-item"><div class="legend-dot" style="border:2px dashed #7b7b9a;background:transparent;"></div>待达成里程碑</div>
+</div>
+
+<!-- ===== Timeline ===== -->
+<div class="timeline-wrap">
+
+  <!-- 建站 -->
+  <div class="tl-item right cat-found">
+    <div class="tl-node"><div class="node-dot"></div></div>
+    <div class="tl-card founded-card">
+      <div class="tl-date">2025 · 07 · 21 &nbsp;16:27</div>
+      <div class="tl-title">🚀 &nbsp;小站正式开站</div>
+      <div class="tl-actual">一切从这里开始，欢迎来到 Steam 同好社区</div>
+    </div>
+  </div>
+
+  <!-- 累计用户 100 -->
+  <div class="tl-item left cat-user">
+    <div class="tl-node"><div class="node-dot"></div></div>
+    <div class="tl-card">
+      <div class="tl-date">2025 · 07 · 31</div>
+      <div class="tl-title">👥 &nbsp;累计入站用户突破 <span class="milestone-num">100</span> 人</div>
+      <div class="tl-actual">🎯 当日实际：<span class="actual-val">611 人</span></div>
+    </div>
+  </div>
+
+  <!-- 单日用户 100 -->
+  <div class="tl-item right cat-user-day">
+    <div class="tl-node"><div class="node-dot"></div></div>
+    <div class="tl-card">
+      <div class="tl-date">2025 · 07 · 31</div>
+      <div class="tl-title">⚡ &nbsp;单日入站用户突破 <span class="milestone-num">100</span> 人</div>
+      <div class="tl-actual">🎯 当日实际：<span class="actual-val">594 人</span></div>
+    </div>
+  </div>
+
+  <!-- 累计用户 1000 -->
+  <div class="tl-item left cat-user">
+    <div class="tl-node"><div class="node-dot"></div></div>
+    <div class="tl-card">
+      <div class="tl-date">2025 · 08 · 01</div>
+      <div class="tl-title">👥 &nbsp;累计入站用户突破 <span class="milestone-num">1,000</span> 人</div>
+      <div class="tl-actual">🎯 当日实际：<span class="actual-val">1,286 人</span></div>
+    </div>
+  </div>
+
+  <!-- 累计发帖 100 -->
+  <div class="tl-item right cat-post">
+    <div class="tl-node"><div class="node-dot"></div></div>
+    <div class="tl-card">
+      <div class="tl-date">2025 · 08 · 01</div>
+      <div class="tl-title">📝 &nbsp;累计发帖突破 <span class="milestone-num">100</span> 篇</div>
+      <div class="tl-actual">🎯 当日实际：<span class="actual-val">188 篇</span></div>
+    </div>
+  </div>
+
+  <!-- 单日发帖 100 -->
+  <div class="tl-item left cat-post-day">
+    <div class="tl-node"><div class="node-dot"></div></div>
+    <div class="tl-card">
+      <div class="tl-date">2025 · 08 · 01</div>
+      <div class="tl-title">🔥 &nbsp;单日发帖突破 <span class="milestone-num">100</span> 篇</div>
+      <div class="tl-actual">🎯 当日实际：<span class="actual-val">106 篇</span></div>
+    </div>
+  </div>
+
+  <!-- 累计用户 2233 -->
+  <div class="tl-item right cat-user">
+    <div class="tl-node"><div class="node-dot"></div></div>
+    <div class="tl-card">
+      <div class="tl-date">2025 · 08 · 05</div>
+      <div class="tl-title">👥 &nbsp;累计入站用户突破 <span class="milestone-num">2,233</span> 人</div>
+      <div class="tl-actual">🎯 当日实际：<span class="actual-val">2,450 人</span></div>
+    </div>
+  </div>
+
+  <!-- 单日用户 1000 -->
+  <div class="tl-item left cat-user-day">
+    <div class="tl-node"><div class="node-dot"></div></div>
+    <div class="tl-card">
+      <div class="tl-date">2025 · 08 · 07</div>
+      <div class="tl-title">⚡ &nbsp;单日入站用户突破 <span class="milestone-num">1,000</span> 人</div>
+      <div class="tl-actual">🎯 当日实际：<span class="actual-val">1,292 人</span></div>
+    </div>
+  </div>
+
+  <!-- 累计发帖 1000 -->
+  <div class="tl-item right cat-post">
+    <div class="tl-node"><div class="node-dot"></div></div>
+    <div class="tl-card">
+      <div class="tl-date">2025 · 08 · 14</div>
+      <div class="tl-title">📝 &nbsp;累计发帖突破 <span class="milestone-num">1,000</span> 篇</div>
+      <div class="tl-actual">🎯 当日实际：<span class="actual-val">1,028 篇</span></div>
+    </div>
+  </div>
+
+  <!-- 累计用户 10000 -->
+  <div class="tl-item left cat-user">
+    <div class="tl-node"><div class="node-dot"></div></div>
+    <div class="tl-card">
+      <div class="tl-date">2025 · 08 · 22</div>
+      <div class="tl-title">👥 &nbsp;累计入站用户突破 <span class="milestone-num">10,000</span> 人</div>
+      <div class="tl-actual">🎯 当日实际：<span class="actual-val">10,407 人</span></div>
+    </div>
+  </div>
+
+  <!-- 累计发帖 2233 -->
+  <div class="tl-item right cat-post">
+    <div class="tl-node"><div class="node-dot"></div></div>
+    <div class="tl-card">
+      <div class="tl-date">2025 · 09 · 07</div>
+      <div class="tl-title">📝 &nbsp;累计发帖突破 <span class="milestone-num">2,233</span> 篇</div>
+      <div class="tl-actual">🎯 当日实际：<span class="actual-val">2,239 篇</span></div>
+    </div>
+  </div>
+
+  <!-- 单日用户 2233 -->
+  <div class="tl-item left cat-user-day">
+    <div class="tl-node"><div class="node-dot"></div></div>
+    <div class="tl-card">
+      <div class="tl-date">2025 · 10 · 01</div>
+      <div class="tl-title">⚡ &nbsp;单日入站用户突破 <span class="milestone-num">2,233</span> 人</div>
+      <div class="tl-actual">🎯 当日实际：<span class="actual-val">2,920 人</span></div>
+    </div>
+  </div>
+
+  <!-- 累计发帖 10000 -->
+  <div class="tl-item right cat-post">
+    <div class="tl-node"><div class="node-dot"></div></div>
+    <div class="tl-card">
+      <div class="tl-date">2026 · 03 · 23</div>
+      <div class="tl-title">📝 &nbsp;累计发帖突破 <span class="milestone-num">10,000</span> 篇</div>
+      <div class="tl-actual">🎯 当日实际：<span class="actual-val">10,180 篇</span></div>
+    </div>
+  </div>
+
+  <!-- ===== 待达成 ===== -->
+  <!-- 单日用户 10000 -->
+  <div class="tl-item tl-pending left cat-user-day">
+    <div class="tl-node"><div class="node-dot"></div></div>
+    <div class="tl-card">
+      <div class="tl-date">待达成</div>
+      <div class="tl-title">⚡ &nbsp;单日入站用户突破 <span class="milestone-num" style="color:var(--muted);">10,000</span> 人</div>
+      <div class="pending-badge">⏳ 当前最高：2,920 人</div>
+    </div>
+  </div>
+
+  <!-- 单日发帖 1000 -->
+  <div class="tl-item tl-pending right cat-post-day">
+    <div class="tl-node"><div class="node-dot"></div></div>
+    <div class="tl-card">
+      <div class="tl-date">待达成</div>
+      <div class="tl-title">🔥 &nbsp;单日发帖突破 <span class="milestone-num" style="color:var(--muted);">1,000</span> 篇</div>
+      <div class="pending-badge">⏳ 当前最高：747 篇</div>
+    </div>
+  </div>
+
+  <!-- 单日发帖 2233 -->
+  <div class="tl-item tl-pending left cat-post-day">
+    <div class="tl-node"><div class="node-dot"></div></div>
+    <div class="tl-card">
+      <div class="tl-date">待达成</div>
+      <div class="tl-title">🔥 &nbsp;单日发帖突破 <span class="milestone-num" style="color:var(--muted);">2,233</span> 篇</div>
+      <div class="pending-badge">⏳ 当前最高：747 篇</div>
+    </div>
+  </div>
+
+  <!-- 单日发帖 10000 -->
+  <div class="tl-item tl-pending right cat-post-day">
+    <div class="tl-node"><div class="node-dot"></div></div>
+    <div class="tl-card">
+      <div class="tl-date">待达成</div>
+      <div class="tl-title">🔥 &nbsp;单日发帖突破 <span class="milestone-num" style="color:var(--muted);">10,000</span> 篇</div>
+      <div class="pending-badge">⏳ 当前最高：747 篇</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== Footer ===== -->
+<footer>
+  <span>Steam 小站</span> &nbsp;·&nbsp; 成长里程碑 &nbsp;·&nbsp; 感谢每一位同好的到来 🎮
+</footer>
+
+</body>
+</html>
